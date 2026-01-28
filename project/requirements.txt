@@ -1,0 +1,7 @@
+dj-database-url==2.1.0
+Django==4.2.11
+django-allauth==0.57.0
+django-colorfield==0.11.0
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+gunicorn==21.2.0
