@@ -26,9 +26,20 @@ except ImportError:
     USE_ENV = False
     # Fallback if python-decouple not installed
     def config(key, default=None, cast=None):
-        return default
-    def Csv(value):
-        return value.split(',') if value else []
+        value = os.environ.get(key, default)
+        if cast:
+            if cast == bool:
+                return str(value).lower() in ('true', '1', 'yes', 'on')
+            elif hasattr(cast, '__call__'):
+                # Handle Csv cast
+                if value and isinstance(value, str):
+                    return [item.strip() for item in value.split(',') if item.strip()]
+                return value if isinstance(value, list) else []
+        return value
+    def Csv(value=None):
+        if value is None:
+            return lambda v: [item.strip() for item in v.split(',') if item.strip()] if v else []
+        return [item.strip() for item in value.split(',') if item.strip()] if value else []
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -40,6 +51,11 @@ SECRET_KEY = config('SECRET_KEY', default='f@q01&ew0&49y#qa&2ggzgurz8@cdm3gpmk$4
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='exam--scheduler.herokuapp.com,localhost,127.0.0.1', cast=Csv)
+# Ensure ALLOWED_HOSTS is always a list
+if isinstance(ALLOWED_HOSTS, str):
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS.split(',') if host.strip()]
+elif not isinstance(ALLOWED_HOSTS, (list, tuple)):
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -159,8 +175,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:3000',
-    cast=Csv()
+    cast=Csv
 )
+# Ensure CORS_ALLOWED_ORIGINS is always a list
+if isinstance(CORS_ALLOWED_ORIGINS, str):
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS.split(',') if origin.strip()]
+elif not isinstance(CORS_ALLOWED_ORIGINS, (list, tuple)):
+    CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
 CORS_ALLOW_CREDENTIALS = True
 
 # Security settings for production

@@ -60,5 +60,6 @@ htmlcov/
 coverage.xml
 *.cover
 
-*.md
+# Secrets / Keys
 *.pem
+*.key

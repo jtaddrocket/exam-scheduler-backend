@@ -1,0 +1,32 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Hoặc master tùy branch chính của bạn
+    paths:
+      - 'project/**'  # Chỉ deploy khi có thay đổi trong thư mục project
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/exam-scheduler-backend/project
+            source venv/bin/activate
+            git pull origin main
+            pip install -r requirements.txt
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            sudo systemctl restart exam-scheduler
+            echo "Deployment completed successfully!"
